@@ -13,10 +13,12 @@ panic-semihosting = "0.5.4"
 nb = "1.0.0"
 embedded-hal = "0.2.4"
 
-[dependencies.stm32f1]
+[dependencies.stm32l0]
 version = "0.12.1"
-features = ["stm32f103", "rt"]
+features = ["stm32l0x3", "rt"]
 
-[dependencies.stm32f1xx-hal]
-version = "0.7.0"
-features = ["rt", "stm32f103", "medium"]
+[dependencies.stm32l0xx-hal]
+version = "0.6.2"
+features = ["stm32l0x3", "rt"]
+
+

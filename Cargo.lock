@@ -88,15 +88,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "embedded-dma"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46c8c02e4347a0267ca60813c952017f4c5948c232474c6010a381a337f1bda4"
-dependencies = [
- "stable_deref_trait",
-]
-
-[[package]]
 name = "embedded-hal"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -214,30 +205,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
-name = "stm32f1"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "849b1e8d9bcfd792c9d9178cf86165d299a661c26e35d9322ae9382d3f3fe460"
-dependencies = [
- "bare-metal",
- "cortex-m",
- "cortex-m-rt",
- "vcell",
-]
-
-[[package]]
-name = "stm32f1"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ccfa19fef0f1655900103f3878db127e7b205e2e5730e3042d61f7e03602996"
-dependencies = [
- "bare-metal",
- "cortex-m",
- "cortex-m-rt",
- "vcell",
-]
-
-[[package]]
 name = "stm32f1-hello"
 version = "0.1.0"
 dependencies = [
@@ -247,23 +214,48 @@ dependencies = [
  "embedded-hal",
  "nb 1.0.0",
  "panic-semihosting",
- "stm32f1 0.12.1",
- "stm32f1xx-hal",
+ "stm32l0 0.12.1",
+ "stm32l0xx-hal",
 ]
 
 [[package]]
-name = "stm32f1xx-hal"
-version = "0.7.0"
+name = "stm32l0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf679de34580d2f8806d9a6384c110b6df002404e1ff024cf8d567c91df4d4b2"
+checksum = "8386ff55bd099b3c6c7ea16bb68296cbe6025981f96ed69b222b6e6633ca6148"
 dependencies = [
+ "bare-metal",
+ "cortex-m",
+ "cortex-m-rt",
+ "vcell",
+]
+
+[[package]]
+name = "stm32l0"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fb3e751ec0b15b4bc271ca782236b6d3851d45d78e67bc094e0f8a45b8900ad"
+dependencies = [
+ "bare-metal",
+ "cortex-m",
+ "cortex-m-rt",
+ "vcell",
+]
+
+[[package]]
+name = "stm32l0xx-hal"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb3d290213676eebb026c57d93d76e878ba554f3781693bb132891aedae83a8e"
+dependencies = [
+ "as-slice",
  "cast",
  "cortex-m",
  "cortex-m-rt",
- "embedded-dma",
+ "cortex-m-semihosting",
  "embedded-hal",
  "nb 0.1.3",
- "stm32f1 0.11.0",
+ "stm32l0 0.10.0",
  "void",
 ]
 
