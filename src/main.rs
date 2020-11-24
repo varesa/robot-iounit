@@ -117,10 +117,15 @@ fn main() -> ! {
     motor1.set_direction(Direction::Forward);
     motor2.set_direction(Direction::Forward);
 
+    let mut delay = cp.SYST.delay(rcc.clocks);
+    delay.delay_ms(2_000_u16);
+
+    motor1.set_direction(Direction::Stopped);
+    motor2.set_direction(Direction::Stopped);
+
     loop {}
 
     /*let mut led = gpioc.pc13.into_push_pull_output();
-    let mut delay = cp.SYST.delay(rcc.clocks);
 
     // Wait for the timer to trigger an update and change the state of the LED
     loop {
