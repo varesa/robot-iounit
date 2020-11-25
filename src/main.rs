@@ -4,12 +4,14 @@
 #![no_main]             //  Don't use the Rust standard bootstrap. We will provide our own.
 #![no_std]              //  Don't use the Rust standard library. We are building a binary that can run on its own.
 
-
 use cortex_m_rt::{entry, exception, ExceptionFrame};    //  Stack frame for exception handling.
 use cortex_m_semihosting::hprintln;                     //  For displaying messages on the debug console.
 use panic_semihosting as _;
 
-use stm32l0xx_hal::{delay::Delay, pac, prelude::*, rcc::Config};
+use stm32l0xx_hal::{delay::Delay, gpio, pac, prelude::*, rcc::Config, serial, serial::Serial1Ext};
+use nb::block;
+use stm32l0xx_hal::serial::Serial1LpExt;
+use core::fmt::Write;
 
 enum Direction {
     Forward,
@@ -27,6 +29,16 @@ impl Invert for Direction {
             Direction::Forward => Direction::Backward,
             Direction::Backward => Direction::Forward,
             Direction::Stopped => Direction::Stopped,
+        }
+    }
+}
+
+impl From<u8> for Direction {
+    fn from(value: u8) -> Self {
+        match value {
+            1 => Direction::Forward,
+            2 => Direction::Backward,
+            _ => Direction::Stopped,
         }
     }
 }
@@ -69,14 +81,28 @@ where PinA: OutputPin, PinEn: OutputPin {
     }
 }
 
-#[entry]
-fn main() -> ! {
-    hprintln!("Hello, world!").unwrap();
-
+fn get_io()
+    -> (
+        Motor<
+            gpio::gpioa::PA10<gpio::Output<gpio::PushPull>>,
+            gpio::gpiob::PB5<gpio::Output<gpio::PushPull>>,
+            gpio::gpiob::PB10<gpio::Output<gpio::PushPull>>,
+            gpio::gpioc::PC7<gpio::Output<gpio::PushPull>>
+        >,
+        Motor<
+            gpio::gpioa::PA8<gpio::Output<gpio::PushPull>>,
+            gpio::gpioa::PA9<gpio::Output<gpio::PushPull>>,
+            gpio::gpioa::PA6<gpio::Output<gpio::PushPull>>,
+            gpio::gpiob::PB6<gpio::Output<gpio::PushPull>>
+        >,
+        serial::Serial<pac::LPUART1>,
+        Delay,
+    ){
     let cp = cortex_m::Peripherals::take().unwrap();
     let dp = pac::Peripherals::take().unwrap();
 
     let mut rcc = dp.RCC.freeze(Config::hsi16());
+    let mut delay = cp.SYST.delay(rcc.clocks);
 
     let mut gpioa = dp.GPIOA.split(&mut rcc);
     let mut gpiob = dp.GPIOB.split(&mut rcc);
@@ -107,7 +133,22 @@ fn main() -> ! {
         pin_pwm: m2_pwm,
         invert: false,
     };
-    
+
+    let serial = dp.LPUART1.usart(gpioc.pc4,gpiob.pb11,serial::Config::default(), &mut rcc).unwrap();
+
+    (motor1, motor2, serial, delay)
+}
+
+#[entry]
+fn main() -> ! {
+    hprintln!("Hello, world!").unwrap();
+
+
+    let (mut motor1, mut motor2, mut serial, mut delay) = get_io();
+    let (mut tx, mut rx) = serial.split();
+
+    tx.write_str("Hello world");
+
     // M1_CS = pa0
     // M2_CS = pa1
 
@@ -117,13 +158,25 @@ fn main() -> ! {
     motor1.set_direction(Direction::Forward);
     motor2.set_direction(Direction::Forward);
 
-    let mut delay = cp.SYST.delay(rcc.clocks);
+
     delay.delay_ms(2_000_u16);
 
     motor1.set_direction(Direction::Stopped);
     motor2.set_direction(Direction::Stopped);
 
-    loop {}
+
+    loop {
+        if let Ok(received) = block!(rx.read()) {
+            // Split the received byte into two:
+            let (m1, m2) = ((received & 0xF0) >> 4, (received & 0x0F));
+
+            motor1.set_direction(m1.into());
+            motor2.set_direction(m2.into());
+
+            //block!(tx.write(received)).ok();
+            tx.write_str("OK\n");
+        }
+    }
 
     /*let mut led = gpioc.pc13.into_push_pull_output();
 
