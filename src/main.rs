@@ -157,9 +157,11 @@ fn main() -> ! {
 
     motor1.set_direction(Direction::Forward);
     motor2.set_direction(Direction::Forward);
+    delay.delay_ms(50_u16);
 
-
-    delay.delay_ms(2_000_u16);
+    motor1.set_direction(Direction::Backward);
+    motor2.set_direction(Direction::Backward);
+    delay.delay_ms(50_u16);
 
     motor1.set_direction(Direction::Stopped);
     motor2.set_direction(Direction::Stopped);
