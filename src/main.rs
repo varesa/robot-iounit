@@ -118,7 +118,7 @@ fn get_io()
         pin_b: m1_in_b,
         pin_en: m1_en,
         pin_pwm: m1_pwm,
-        invert: true,
+        invert: false,
     };
 
     let mut m2_in_a = gpioa.pa8.into_push_pull_output();
