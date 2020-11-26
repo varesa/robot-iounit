@@ -5,7 +5,7 @@ define hook-quit
 end
 
 # Connect to OpenOCD
-target extended-remote :3333
+target extended-remote 192.168.16.109:3333
 
 # print demangled symbols
 set print asm-demangle on
