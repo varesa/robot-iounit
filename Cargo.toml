@@ -19,6 +19,6 @@ features = ["stm32l0x3", "rt"]
 
 [dependencies.stm32l0xx-hal]
 version = "0.6.2"
-features = ["stm32l0x3", "rt"]
+features = ["mcu-STM32L073RZTx", "rt"]
 
 
