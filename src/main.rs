@@ -23,6 +23,11 @@ trait Invert {
     fn invert(self) -> Self;
 }
 
+trait Drive  {
+    fn enable(&mut self);
+    fn set_direction(&mut self,  dir: Direction);
+}
+
 impl Invert for Direction {
     fn invert(self) -> Self {
         match self {
@@ -51,8 +56,12 @@ struct Motor<PinA, PinB, PinEn, PinPwm> {
     invert: bool,
 }
 
-impl<PinA: OutputPin, PinB: OutputPin, PinEn: OutputPin, PinPwm: OutputPin> Motor<PinA, PinB, PinEn, PinPwm> 
-where PinA: OutputPin, PinEn: OutputPin {
+impl<
+    PinA: OutputPin,
+    PinB: OutputPin,
+    PinEn: OutputPin,
+    PinPwm: OutputPin
+> Drive for Motor<PinA, PinB, PinEn, PinPwm> {
     fn enable(&mut self) {
        self.pin_en.set_high();
        self.pin_pwm.set_high();
@@ -81,23 +90,12 @@ where PinA: OutputPin, PinEn: OutputPin {
     }
 }
 
-fn get_io()
-    -> (
-        Motor<
-            gpio::gpioa::PA10<gpio::Output<gpio::PushPull>>,
-            gpio::gpiob::PB5<gpio::Output<gpio::PushPull>>,
-            gpio::gpiob::PB10<gpio::Output<gpio::PushPull>>,
-            gpio::gpioc::PC7<gpio::Output<gpio::PushPull>>
-        >,
-        Motor<
-            gpio::gpioa::PA8<gpio::Output<gpio::PushPull>>,
-            gpio::gpioa::PA9<gpio::Output<gpio::PushPull>>,
-            gpio::gpioa::PA6<gpio::Output<gpio::PushPull>>,
-            gpio::gpiob::PB6<gpio::Output<gpio::PushPull>>
-        >,
-        serial::Serial<pac::LPUART1>,
-        Delay,
-    ){
+fn get_io() -> (
+    impl Drive,
+    impl Drive,
+    serial::Serial<pac::LPUART1>,
+    Delay,
+) {
     let cp = cortex_m::Peripherals::take().unwrap();
     let dp = pac::Peripherals::take().unwrap();
 
