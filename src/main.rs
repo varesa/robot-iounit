@@ -19,7 +19,17 @@ mod motor;
 use direction::Direction;
 use motor::{Motor,Drive};
 
-
+macro_rules! make_motor {
+    ($pin_a:expr, $pin_b:expr, $pin_enable:expr, $pin_pwm:expr, $invert:expr) => {
+        Motor  {
+            pin_a: $pin_a.into_push_pull_output(),
+            pin_b: $pin_b.into_push_pull_output(),
+            pin_en: $pin_enable.into_push_pull_output(),
+            pin_pwm: $pin_pwm.into_push_pull_output(),
+            invert: $invert,
+        }
+    };
+}
 
 fn get_io() -> (
     impl Drive,
@@ -37,31 +47,8 @@ fn get_io() -> (
     let gpiob = dp.GPIOB.split(&mut rcc);
     let gpioc = dp.GPIOC.split(&mut rcc);
 
-    let m1_in_a = gpioa.pa10.into_push_pull_output();
-    let m1_in_b = gpiob.pb5.into_push_pull_output();
-    let m1_en = gpiob.pb10.into_push_pull_output();
-    let m1_pwm = gpioc.pc7.into_push_pull_output();
-
-    let motor1  = Motor {
-        pin_a: m1_in_a,
-        pin_b: m1_in_b,
-        pin_en: m1_en,
-        pin_pwm: m1_pwm,
-        invert: false,
-    };
-
-    let m2_in_a = gpioa.pa8.into_push_pull_output();
-    let m2_in_b = gpioa.pa9.into_push_pull_output();
-    let m2_en = gpioa.pa6.into_push_pull_output();
-    let m2_pwm = gpiob.pb6.into_push_pull_output();
-
-    let motor2  = Motor {
-        pin_a: m2_in_a,
-        pin_b: m2_in_b,
-        pin_en: m2_en,
-        pin_pwm: m2_pwm,
-        invert: false,
-    };
+    let motor1 = make_motor!(gpioa.pa10, gpiob.pb5, gpiob.pb10, gpioc.pc7, false);
+    let motor2 = make_motor!(gpioa.pa8, gpioa.pa9, gpioa.pa6, gpiob.pb6, false);
 
     // Unused current sense (analog) pins:
     // M1_CS = pa0
