@@ -11,7 +11,7 @@ use panic_semihosting as _;
 use stm32l0xx_hal::{delay::Delay, pac, prelude::*, rcc::Config, serial};
 use nb::block;
 use stm32l0xx_hal::serial::Serial1LpExt;
-use core::fmt::Write;
+use core::fmt::{Debug, Write};
 
 enum Direction {
     Forward,
@@ -56,15 +56,14 @@ struct Motor<PinA, PinB, PinEn, PinPwm> {
     invert: bool,
 }
 
-impl<
-    PinA: OutputPin,
-    PinB: OutputPin,
-    PinEn: OutputPin,
-    PinPwm: OutputPin
-> Drive for Motor<PinA, PinB, PinEn, PinPwm> {
+impl<PinA, PinB, PinEn, PinPwm> Drive for Motor<PinA, PinB, PinEn, PinPwm>
+where
+    PinA: OutputPin, PinA::Error: Debug, PinB: OutputPin, PinB::Error: Debug,
+    PinEn: OutputPin, PinEn::Error: Debug, PinPwm: OutputPin, PinPwm::Error: Debug,
+{
     fn enable(&mut self) {
-       self.pin_en.set_high();
-       self.pin_pwm.set_high();
+       self.pin_en.set_high().unwrap();
+       self.pin_pwm.set_high().unwrap();
     }
 
     fn set_direction(&mut self, dir: Direction) {
@@ -75,16 +74,16 @@ impl<
         };
         match dir {
             Direction::Forward => {
-                self.pin_a.set_high();
-                self.pin_b.set_low();
+                self.pin_a.set_high().unwrap();
+                self.pin_b.set_low().unwrap();
             },
             Direction::Backward =>  {
-                self.pin_a.set_low();
-                self.pin_b.set_high();
+                self.pin_a.set_low().unwrap();
+                self.pin_b.set_high().unwrap();
             },
             Direction::Stopped => {
-                self.pin_a.set_low();
-                self.pin_b.set_low();
+                self.pin_a.set_low().unwrap();
+                self.pin_b.set_low().unwrap();
             }
         }
     }
@@ -100,18 +99,18 @@ fn get_io() -> (
     let dp = pac::Peripherals::take().unwrap();
 
     let mut rcc = dp.RCC.freeze(Config::hsi16());
-    let mut delay = cp.SYST.delay(rcc.clocks);
+    let delay = cp.SYST.delay(rcc.clocks);
 
-    let mut gpioa = dp.GPIOA.split(&mut rcc);
-    let mut gpiob = dp.GPIOB.split(&mut rcc);
-    let mut gpioc = dp.GPIOC.split(&mut rcc);
+    let gpioa = dp.GPIOA.split(&mut rcc);
+    let gpiob = dp.GPIOB.split(&mut rcc);
+    let gpioc = dp.GPIOC.split(&mut rcc);
 
-    let mut m1_in_a = gpioa.pa10.into_push_pull_output();
-    let mut m1_in_b = gpiob.pb5.into_push_pull_output();
-    let mut m1_en = gpiob.pb10.into_push_pull_output();
-    let mut m1_pwm = gpioc.pc7.into_push_pull_output();
+    let m1_in_a = gpioa.pa10.into_push_pull_output();
+    let m1_in_b = gpiob.pb5.into_push_pull_output();
+    let m1_en = gpiob.pb10.into_push_pull_output();
+    let m1_pwm = gpioc.pc7.into_push_pull_output();
 
-    let mut motor1  = Motor {
+    let motor1  = Motor {
         pin_a: m1_in_a,
         pin_b: m1_in_b,
         pin_en: m1_en,
@@ -119,12 +118,12 @@ fn get_io() -> (
         invert: false,
     };
 
-    let mut m2_in_a = gpioa.pa8.into_push_pull_output();
-    let mut m2_in_b = gpioa.pa9.into_push_pull_output();
-    let mut m2_en = gpioa.pa6.into_push_pull_output();
-    let mut m2_pwm = gpiob.pb6.into_push_pull_output();
+    let m2_in_a = gpioa.pa8.into_push_pull_output();
+    let m2_in_b = gpioa.pa9.into_push_pull_output();
+    let m2_en = gpioa.pa6.into_push_pull_output();
+    let m2_pwm = gpiob.pb6.into_push_pull_output();
 
-    let mut motor2  = Motor {
+    let motor2  = Motor {
         pin_a: m2_in_a,
         pin_b: m2_in_b,
         pin_en: m2_en,
@@ -142,7 +141,7 @@ fn main() -> ! {
     hprintln!("Hello, world!").unwrap();
 
 
-    let (mut motor1, mut motor2, mut serial, mut delay) = get_io();
+    let (mut motor1, mut motor2, serial, mut delay) = get_io();
     let (mut tx, mut rx) = serial.split();
 
     tx.write_str("Hello world");
