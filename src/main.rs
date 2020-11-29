@@ -11,83 +11,15 @@ use panic_semihosting as _;
 use stm32l0xx_hal::{delay::Delay, pac, prelude::*, rcc::Config, serial};
 use nb::block;
 use stm32l0xx_hal::serial::Serial1LpExt;
-use core::fmt::{Debug, Write};
+use core::fmt::Write;
 
-enum Direction {
-    Forward,
-    Backward,
-    Stopped,
-}
+mod direction;
+mod motor;
 
-trait Invert {
-    fn invert(self) -> Self;
-}
+use direction::Direction;
+use motor::{Motor,Drive};
 
-trait Drive  {
-    fn enable(&mut self);
-    fn set_direction(&mut self,  dir: Direction);
-}
 
-impl Invert for Direction {
-    fn invert(self) -> Self {
-        match self {
-            Direction::Forward => Direction::Backward,
-            Direction::Backward => Direction::Forward,
-            Direction::Stopped => Direction::Stopped,
-        }
-    }
-}
-
-impl From<u8> for Direction {
-    fn from(value: u8) -> Self {
-        match value {
-            1 => Direction::Forward,
-            2 => Direction::Backward,
-            _ => Direction::Stopped,
-        }
-    }
-}
-
-struct Motor<PinA, PinB, PinEn, PinPwm> {
-    pin_a: PinA,
-    pin_b: PinB,
-    pin_en: PinEn,
-    pin_pwm: PinPwm,
-    invert: bool,
-}
-
-impl<PinA, PinB, PinEn, PinPwm> Drive for Motor<PinA, PinB, PinEn, PinPwm>
-where
-    PinA: OutputPin, PinA::Error: Debug, PinB: OutputPin, PinB::Error: Debug,
-    PinEn: OutputPin, PinEn::Error: Debug, PinPwm: OutputPin, PinPwm::Error: Debug,
-{
-    fn enable(&mut self) {
-       self.pin_en.set_high().unwrap();
-       self.pin_pwm.set_high().unwrap();
-    }
-
-    fn set_direction(&mut self, dir: Direction) {
-        let dir = if self.invert {
-            dir.invert()
-        } else {
-            dir
-        };
-        match dir {
-            Direction::Forward => {
-                self.pin_a.set_high().unwrap();
-                self.pin_b.set_low().unwrap();
-            },
-            Direction::Backward =>  {
-                self.pin_a.set_low().unwrap();
-                self.pin_b.set_high().unwrap();
-            },
-            Direction::Stopped => {
-                self.pin_a.set_low().unwrap();
-                self.pin_b.set_low().unwrap();
-            }
-        }
-    }
-}
 
 fn get_io() -> (
     impl Drive,
@@ -131,6 +63,10 @@ fn get_io() -> (
         invert: false,
     };
 
+    // Unused current sense (analog) pins:
+    // M1_CS = pa0
+    // M2_CS = pa1
+
     let serial = dp.LPUART1.usart(gpioc.pc4,gpiob.pb11,serial::Config::default(), &mut rcc).unwrap();
 
     (motor1, motor2, serial, delay)
@@ -146,8 +82,6 @@ fn main() -> ! {
 
     tx.write_str("Hello world");
 
-    // M1_CS = pa0
-    // M2_CS = pa1
 
     motor1.enable();
     motor2.enable();
@@ -172,20 +106,9 @@ fn main() -> ! {
             motor1.set_direction(m1.into());
             motor2.set_direction(m2.into());
 
-            //block!(tx.write(received)).ok();
             tx.write_str("OK\n");
         }
     }
-
-    /*let mut led = gpioc.pc13.into_push_pull_output();
-
-    // Wait for the timer to trigger an update and change the state of the LED
-    loop {
-        delay.delay_ms(1_000_u16);
-        led.set_high().unwrap();
-        delay.delay_ms(1_000_u16);
-        led.set_low().unwrap();
-    }*/
 }
 
 #[exception]
