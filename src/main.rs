@@ -8,7 +8,7 @@ use cortex_m_rt::{entry, exception, ExceptionFrame};    //  Stack frame for exce
 use cortex_m_semihosting::hprintln;                     //  For displaying messages on the debug console.
 use panic_semihosting as _;
 
-use stm32l0xx_hal::{delay::Delay, gpio, pac, prelude::*, rcc::Config, serial, serial::Serial1Ext};
+use stm32l0xx_hal::{delay::Delay, pac, prelude::*, rcc::Config, serial};
 use nb::block;
 use stm32l0xx_hal::serial::Serial1LpExt;
 use core::fmt::Write;
